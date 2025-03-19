@@ -1,0 +1,30 @@
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	var n, m int
+	fmt.Print("Введите значение n и m: ")
+	fmt.Scan(&n, &m)
+	start := time.Now()
+	res := Akkerman(n, m)
+	duration := time.Since(start)
+	fmt.Printf("Результат: %d  \n", res)
+	fmt.Println("Длительность: ", duration)
+}
+
+func Akkerman(n, m int) (res int) {
+	var curr int
+	if n == 0 {
+		curr = m + 1
+	} else if n != 0 && m == 0 {
+		curr = Akkerman(n-1, 1)
+	} else if n > 0 && m >= 0 {
+		curr = Akkerman(n-1, Akkerman(n, m-1))
+	}
+	res = curr
+	return res
+}
