@@ -1,0 +1,277 @@
+package main
+
+import (
+	"fmt"
+)
+
+type Node struct {
+	value int
+	next  *Node
+}
+
+type DoubleNode struct {
+	value int
+	next  *DoubleNode
+	prev  *DoubleNode
+}
+
+func copyDobleNodeArray(head *DoubleNode) *DoubleNode {
+	if head == nil {
+		return nil
+	}
+	var cur, copiedHead, copied *DoubleNode
+	copiedHead = buildDLNode(head.value)
+	cur = head.next
+	copied = copiedHead
+	for cur != nil {
+		node := buildDLNode(cur.value)
+
+		copied.next = node
+		node.prev = copied
+
+		copied = node
+		cur = cur.next
+	}
+
+	return copiedHead
+}
+
+func dll_print(head *DoubleNode) {
+	for head != nil {
+		fmt.Printf("%d ", head.value)
+		if head.next != nil {
+			fmt.Printf("-> <- ")
+		}
+		head = head.next
+	}
+	fmt.Println("")
+}
+
+func ReadDLL() *DoubleNode {
+	var len int
+
+	fmt.Println("Введите длинну списка: ")
+	fmt.Scan(&len)
+
+	if len < 1 {
+		return nil
+	}
+	var head, tail *DoubleNode
+
+	fmt.Println("Введите значения: ")
+	for i := 0; i < len; i++ {
+		var value int
+		fmt.Scan(&value)
+		node := buildDLNode(value)
+		if head == nil {
+			head = node
+			tail = node
+		} else {
+			tail.next = node
+			node.prev = tail
+			tail = node
+		}
+	}
+
+	return head
+}
+
+func buildDLNode(value int) *DoubleNode {
+	head := &DoubleNode{value, nil, nil}
+	return head
+}
+
+func findHead(head *Node) *Node {
+	if head == nil {
+		return nil
+	}
+	fast, slow := head, head
+
+	for fast != nil && fast.next != nil {
+		slow = slow.next
+		fast = fast.next.next
+		if fast == slow {
+			break
+		}
+	}
+	if fast == nil || fast.next == nil {
+		return nil
+	}
+	fast = head
+	for fast != slow {
+		fast = fast.next
+		slow = slow.next
+	}
+	return slow
+}
+
+func PrintList(head *Node) {
+	if head == nil {
+		fmt.Println("List is empty.")
+		return
+	}
+
+	cycleHead := findHead(head)
+
+	if cycleHead == nil {
+		curr := head
+		for curr != nil {
+			fmt.Print(curr.value)
+			curr = curr.next
+			if curr != nil {
+				fmt.Print(" -> ")
+			}
+		}
+		fmt.Println()
+		return
+	}
+
+	curr := head
+	for curr != cycleHead {
+		fmt.Print(curr.value)
+		curr = curr.next
+		if curr != nil {
+			fmt.Print(" -> ")
+		}
+	}
+
+	fmt.Print("[")
+	cycleCurr := cycleHead
+	for {
+		fmt.Print(cycleCurr.value)
+		cycleCurr = cycleCurr.next
+		if cycleCurr != cycleHead {
+			fmt.Print(" -> ")
+		} else {
+			break
+		}
+	}
+	fmt.Println("]")
+}
+
+func quickSort(head *Node) *Node {
+	if head == nil || head.next == nil {
+		return head
+	}
+
+	pivot := head
+	head = head.next
+	pivot.next = nil
+
+	var less, greater, lessTail, greaterTail *Node
+
+	for head != nil {
+		next := head.next
+		head.next = nil
+
+		if head.value <= pivot.value {
+			if less == nil {
+				less = head
+				lessTail = head
+			} else {
+				lessTail.next = head
+				lessTail = head
+			}
+		} else {
+			if greater == nil {
+				greater = head
+				greaterTail = head
+			} else {
+				greaterTail.next = head
+				greaterTail = head
+			}
+		}
+
+		head = next
+	}
+
+	// Рекурсивно сортируем подсписки
+	less = quickSort(less)
+	greater = quickSort(greater)
+
+	// Собираем результат
+	if less != nil {
+		lessTail.next = pivot
+		pivot.next = greater
+		return less
+	}
+
+	pivot.next = greater
+	return pivot
+}
+func create() (n *Node) {
+	var len, loop int
+	fmt.Println("Введите длинну списка и элемент зацикливания: ")
+	fmt.Scan(&len, &loop)
+	if len < 1 {
+		return nil
+	}
+
+	var x int
+	fmt.Println("Введите элементы: ")
+	fmt.Scan(&x)
+	head := &Node{value: x}
+	cur := head
+	var loopNode *Node
+	for i := 0; i < len-1; i++ {
+		fmt.Scan(&x)
+		cur.next = &Node{value: x}
+		if i == loop-1 {
+			loopNode = cur
+		}
+		cur = cur.next
+
+	}
+	fmt.Println("Список зацикленный? Если да, то нажмите 1: ")
+	var choice string
+	fmt.Scan(&choice)
+	if choice == "1" {
+		cur.next = loopNode
+	}
+	return head
+}
+
+func llRemoveDuplicates(head *Node) *Node {
+	current := head
+
+	for current != nil && current.next != nil {
+		if current.value == current.next.value {
+			duplicate := current.next
+			current.next = duplicate.next
+		} else {
+			current = current.next
+		}
+	}
+
+	return head
+}
+
+func main() {
+	fmt.Println("С 1 апреля!: ")
+	for {
+		fmt.Println("Выберите операцию: ")
+		fmt.Println("Поиск головы цикла: 1")
+		fmt.Println("Скопировать Список: 2 ")
+		fmt.Println("Удалить дубликаты: 3")
+		var inputValue string
+		fmt.Scan(&inputValue)
+		switch inputValue {
+		case "1":
+			entranceLL := create()
+			PrintList(entranceLL)
+			fmt.Println("")
+		case "2":
+			var entranceDll *DoubleNode
+			entranceDll = ReadDLL()
+			dll_print(copyDobleNodeArray(entranceDll))
+			fmt.Println("")
+		case "3":
+			entranceLL := create()
+			PrintList(llRemoveDuplicates(quickSort(entranceLL)))
+			fmt.Println("")
+		default:
+			fmt.Println("Некорректное значение. Повтоорите ввод: ")
+		}
+	}
+
+}
