@@ -1,0 +1,267 @@
+package main
+
+import (
+	"container/list"
+	"fmt"
+)
+
+type Stack struct {
+	values []int
+	mins   []int
+}
+
+// Задание 1
+func searchRound(s string) bool {
+	stack := []rune{}
+
+	for _, char := range s {
+		if char == '(' {
+			stack = append(stack, char)
+		} else if char == ')' {
+			if len(stack) == 0 || stack[len(stack)-1] != '(' {
+				return false
+			}
+			stack = stack[:len(stack)-1]
+		}
+	}
+
+	return len(stack) == 0
+}
+
+func isCorrect(s string) bool {
+	stack := []rune{}
+	pairs := map[rune]rune{
+		')': '(',
+		']': '[',
+		'}': '{',
+	}
+
+	for _, char := range s {
+		if char == '(' || char == '[' || char == '{' {
+			stack = append(stack, char)
+		} else if closing, exist := pairs[char]; exist {
+			if len(stack) == 0 || stack[len(stack)-1] != closing {
+				return false
+			}
+			stack = stack[:len(stack)-1]
+		}
+	}
+
+	return len(stack) == 0
+}
+
+//Задание 2
+
+func (s *Stack) Push(value int) {
+	s.values = append(s.values, value)
+
+	if len(s.mins) == 0 || value <= s.mins[len(s.mins)-1] {
+		s.mins = append(s.mins, value)
+	}
+}
+
+func (s *Stack) Pop() (int, bool) {
+	if len(s.values) == 0 {
+		return 0, false // Стек пуст
+	}
+	value := s.values[len(s.values)-1]
+	s.values = s.values[:len(s.values)-1]
+
+	if value == s.mins[len(s.mins)-1] {
+		s.mins = s.mins[:len(s.mins)-1]
+	}
+
+	return value, true
+}
+
+// Min возвращает минимальный элемент стека
+func (s *Stack) Min() (int, bool) {
+	if len(s.mins) == 0 {
+		return 0, false // Стек пуст
+	}
+	return s.mins[len(s.mins)-1], true
+}
+
+func maxInSlidingWindow(nums []int, k int) []int {
+	if len(nums) == 0 || k <= 0 {
+		return []int{}
+	}
+
+	var result []int
+	deque := list.New()
+
+	for i := 0; i < len(nums); i++ {
+		if deque.Len() > 0 && deque.Front().Value.(int) < i-k+1 {
+			deque.Remove(deque.Front())
+		}
+
+		for deque.Len() > 0 && nums[deque.Back().Value.(int)] < nums[i] {
+			deque.Remove(deque.Back())
+		}
+
+		deque.PushBack(i)
+
+		if i >= k-1 {
+			result = append(result, nums[deque.Front().Value.(int)])
+		}
+	}
+
+	return result
+	// переделать
+}
+
+func findDuplicate(nums []int) int {
+	// Шаг 1: Найти пересечение
+	slow := nums[0]
+	fast := nums[0]
+
+	// Двигаемся по массиву, пока не найдем пересечение
+	for {
+		slow = nums[slow]       // Черепашка двигается на один шаг
+		fast = nums[nums[fast]] // Заяц двигается на два шага
+		if slow == fast {
+			break // Найдено пересечение
+		}
+	}
+
+	// Шаг 2: Найти начало цикла
+	slow = nums[0] // Ставим черепашку на начало
+	for slow != fast {
+		slow = nums[slow] // Двигаемся на один шаг
+		fast = nums[fast] // Двигаемся на один шаг
+	}
+
+	return slow // Это и есть повторяющееся число
+}
+
+func zeroMatrix(matrix [][]int) {
+	if len(matrix) == 0 {
+		return
+	}
+
+	rows := len(matrix)
+	cols := len(matrix[0])
+
+	rowZero := make([]bool, rows)
+	colZero := make([]bool, cols)
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			if matrix[i][j] == 0 {
+				rowZero[i] = true
+				colZero[j] = true
+			}
+		}
+	}
+
+	for i := 0; i < rows; i++ {
+		if rowZero[i] {
+			for j := 0; j < cols; j++ {
+				matrix[i][j] = 0
+			}
+		}
+	}
+
+	for j := 0; j < cols; j++ {
+		if colZero[j] {
+			for i := 0; i < rows; i++ {
+				matrix[i][j] = 0
+			}
+		}
+	}
+}
+
+func main() {
+	for {
+		fmt.Println("\nМеню:")
+		fmt.Println("1 - Проверка правильности круглых скобок ()")
+		fmt.Println("2 - Проверка правильности всех скобок ()[]{}")
+		fmt.Println("3 - Работа со стеком (Push, Pop, Min)")
+		fmt.Println("4 - Максимум в скользящем окне")
+		fmt.Println("5 - Поиск дубликата в массиве")
+		fmt.Println("6 - Зануление строк и столбцов матрицы")
+		fmt.Println("0 - Выход")
+		fmt.Print("Выберите номер задания: ")
+
+		var choice string
+		fmt.Scan(&choice)
+
+		switch choice {
+		case "1":
+			fmt.Print("Введите строку с круглыми скобками: ")
+			var input string
+			fmt.Scan(&input)
+			if searchRound(input) {
+				fmt.Println("Скобки расставлены верно")
+			} else {
+				fmt.Println("Скобки расставлены неверно")
+			}
+
+		case "2":
+			fmt.Print("Введите строку со скобками ()[]{}: ")
+			var input string
+			fmt.Scan(&input)
+			if isCorrect(input) {
+				fmt.Println("Скобки расставлены верно")
+			} else {
+				fmt.Println("Скобки расставлены неверно")
+			}
+
+		case "3":
+			stack := Stack{}
+			fmt.Println("Демонстрация работы стека:")
+			stack.Push(3)
+			stack.Push(5)
+			stack.Push(2)
+			stack.Push(1)
+
+			if min, ok := stack.Min(); ok {
+				fmt.Printf("Минимальный элемент: %d\n", min)
+			}
+
+			if val, ok := stack.Pop(); ok {
+				fmt.Printf("Извлеченный элемент: %d\n", val)
+			}
+
+			if min, ok := stack.Min(); ok {
+				fmt.Printf("Новый минимальный элемент: %d\n", min)
+			}
+
+		case "4":
+			nums := []int{1, 3, -1, -3, 5, 3, 6, 7}
+			k := 3
+			fmt.Printf("Массив: %v, окно: %d\n", nums, k)
+			result := maxInSlidingWindow(nums, k)
+			fmt.Printf("Результат: %v\n", result)
+
+		case "5":
+			nums := []int{1, 3, 4, 2, 2}
+			fmt.Printf("Массив: %v\n", nums)
+			dup := findDuplicate(nums)
+			fmt.Printf("Дубликат: %d\n", dup)
+
+		case "6":
+			matrix := [][]int{
+				{1, 2, 3},
+				{4, 0, 6},
+				{7, 8, 9},
+			}
+			fmt.Println("Исходная матрица:")
+			for _, row := range matrix {
+				fmt.Println(row)
+			}
+			zeroMatrix(matrix)
+			fmt.Println("После зануления:")
+			for _, row := range matrix {
+				fmt.Println(row)
+			}
+
+		case "0":
+			fmt.Println("Выход из программы")
+			return
+
+		default:
+			fmt.Println("Неверный выбор, попробуйте снова")
+		}
+	}
+}
