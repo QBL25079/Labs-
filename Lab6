@@ -1,0 +1,144 @@
+package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+type Item struct {
+	Name   string
+	Weight int
+	Price  int
+}
+type Backpack struct {
+	Items     []Item
+	TotalCost int
+}
+
+func (i Item) GetName() string {
+	return i.Name
+}
+
+func (i Item) GetWeight() int {
+	return i.Weight
+}
+
+func (i Item) GetPrice() int {
+	return i.Price
+}
+
+func NewBackpack(items []Item, totalCost int) *Backpack {
+	return &Backpack{
+		Items:     items,
+		TotalCost: totalCost,
+	}
+}
+
+func (b *Backpack) GetDescription() string {
+	var names []string
+	for _, item := range b.Items {
+		names = append(names, item.Name)
+	}
+	if len(names) == 0 {
+		return "0"
+	}
+	return strings.Join(names, "+") + "-" + fmt.Sprint(b.TotalCost)
+}
+
+func main() {
+	fmt.Println("Лабораторная работа №6")
+	fmt.Println("Выполнил Шульгин Николай")
+
+	// Исходные данные
+	numItems := 3
+	capacity := 4
+
+	items := []Item{
+		{"Коробка передач", 1, 12500},
+		{"Двигатель", 4, 30000},
+		{"Пахучка на зеркало", 3, 22500},
+	}
+
+	dp := make([][]*Backpack, numItems+1)
+	for i := range dp {
+		dp[i] = make([]*Backpack, capacity+1)
+	}
+
+	for i := 0; i <= numItems; i++ {
+		for w := 0; w <= capacity; w++ {
+			if i == 0 || w == 0 {
+				dp[i][w] = NewBackpack([]Item{}, 0)
+			} else if i == 1 {
+				if items[0].GetWeight() <= w {
+					dp[1][w] = NewBackpack([]Item{items[0]}, items[0].GetPrice())
+				} else {
+					dp[1][w] = NewBackpack([]Item{}, 0)
+				}
+			} else {
+				if items[i-1].GetWeight() > w {
+					dp[i][w] = dp[i-1][w]
+				} else {
+					newCost := items[i-1].GetPrice() + dp[i-1][w-items[i-1].GetWeight()].TotalCost
+					if dp[i-1][w].TotalCost > newCost {
+						dp[i][w] = dp[i-1][w]
+					} else {
+						newItems := append([]Item{items[i-1]}, dp[i-1][w-items[i-1].GetWeight()].Items...)
+						dp[i][w] = NewBackpack(newItems, newCost)
+					}
+				}
+			}
+		}
+	}
+
+	fmt.Println("Таблица мемоизации:")
+	for i := 1; i <= numItems; i++ {
+		for w := 1; w <= capacity; w++ {
+			fmt.Print(dp[i][w].GetDescription(), "\t")
+		}
+		fmt.Println()
+	}
+
+	fmt.Println("Товары:")
+	fmt.Println("Коробка передач - 1кг - 12500 пакистанских рупий")
+	fmt.Println("Двигатель - 3кг - 22500 пакистанских рупий")
+	fmt.Println("пахучка на зеркало - 4кг - 30000 пакистанских рупий")
+	fmt.Printf("\nОтвет: %s\n\n", dp[numItems][capacity].GetDescription())
+
+	fmt.Println("\nЗадача об оптимальном заполнении рюкзака")
+	fmt.Println("С повторениями")
+
+	maxCost := make([]int, capacity+1)
+	includedItems := make([][]Item, capacity+1)
+
+	for w := 1; w <= capacity; w++ {
+		for _, item := range items {
+			if item.GetWeight() <= w {
+				currentCost := item.GetPrice() + maxCost[w-item.GetWeight()]
+				if currentCost > maxCost[w] {
+					maxCost[w] = currentCost
+					newItems := append([]Item{item}, includedItems[w-item.GetWeight()]...)
+					includedItems[w] = newItems
+				}
+			}
+		}
+	}
+
+	fmt.Println("Грузоподъёмность\tМакс. стоимость\tСостав")
+	for w := 1; w <= capacity; w++ {
+		var itemNames []string
+		for _, item := range includedItems[w] {
+			itemNames = append(itemNames, item.GetName())
+		}
+		fmt.Printf("%d кг\t\t\t%d п. рупий\t\t%s\n", w, maxCost[w], strings.Join(itemNames, " + "))
+	}
+
+	fmt.Printf("\nОптимальное решение для рюкзака %d пю рупий:\n", capacity)
+	fmt.Printf("Состав: %s\n", strings.Join(func() []string {
+		var names []string
+		for _, item := range includedItems[capacity] {
+			names = append(names, item.GetName())
+		}
+		return names
+	}(), " + "))
+	fmt.Printf("Общая стоимость: %d пакистансикх рупий\n", maxCost[capacity])
+}
