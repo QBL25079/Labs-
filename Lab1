@@ -1,0 +1,63 @@
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+func main() {
+	beginer := GenerateMas()
+	start := time.Now()
+	bubleSort(beginer)
+	duration := time.Since(start)
+	fmt.Println("Выполнение пузырьковой сортировки:", duration)
+	squick := time.Now()
+	quickSort(beginer, 0, len(beginer)-1)
+	dquick := time.Since(squick)
+	fmt.Println("Выполнение быстрой сортировки:", dquick)
+}
+
+
+
+func bubleSort(array []int) []int {
+	for i := 0; i < len(array)-1; i++ {
+		for j := 0; j < len(array)-i-1; j++ {
+			if array[j] > array[j+1] {
+				array[j], array[j+1] = array[j+1], array[j]
+			}
+		}
+	}
+	return array
+}
+
+func Parts(arr []int, low, high int) ([]int, int) {
+	pivot := arr[high]
+	i := low
+	for j := low; j < high; j++ {
+		if arr[j] < pivot {
+			arr[i], arr[j] = arr[j], arr[i]
+			i++
+		}
+	}
+	arr[i], arr[high] = arr[high], arr[i]
+	return arr, i
+}
+
+func quickSort(arr []int, low, high int) []int {
+	if low < high {
+		var p int
+		arr, p = Parts(arr, low, high)
+		arr = quickSort(arr, low, p-1)
+		arr = quickSort(arr, p+1, high)
+	}
+	return arr
+}
+
+func GenerateMas() []int {
+	a := make([]int, 100000)
+	for i := 0; i < len(a); i++ {
+		a[i] = rand.Intn(1000000)
+	}
+	return a
+}
